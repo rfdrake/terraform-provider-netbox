@@ -49,6 +49,12 @@ This resource will retrieve the next available IP address from a given prefix or
 				Type:     schema.TypeInt,
 				Optional: true,
 			},
+			"interface_type": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "virtualmachine",
+				ValidateFunc: validation.StringInSlice([]string{"virtualmachine", "device"}, false),
+			},
 			"vrf_id": {
 				Type:     schema.TypeInt,
 				Optional: true,
@@ -186,7 +192,11 @@ func resourceNetboxAvailableIPAddressUpdate(d *schema.ResourceData, m interface{
 
 	if interfaceID, ok := d.GetOk("interface_id"); ok {
 		// The other possible type is dcim.interface for devices
-		data.AssignedObjectType = strToPtr("virtualization.vminterface")
+		if d.Get("interface_type") == "virtualmachine" {
+			data.AssignedObjectType = strToPtr("virtualization.vminterface")
+		} else {
+			data.AssignedObjectType = strToPtr("dcim.interface")
+		}
 		data.AssignedObjectID = int64ToPtr(int64(interfaceID.(int)))
 	}
 
